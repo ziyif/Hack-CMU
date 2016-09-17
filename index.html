@@ -120,7 +120,7 @@ function Course (data) {
   this.getLabel = function() {
     label = this.instructor
     return label
-  }
+  };
 };
 
 function normalizeScore(score) {
@@ -143,8 +143,7 @@ function search(text) {
 
   if (search_url) {
     $.getJSON( search_url, function( data ) {
-      var dataPoints = [];
-      var labels = []
+      var courses = [];
       var result_prompt = "<br/>";
       try {
         var hits = data.hits.hits;
@@ -154,33 +153,46 @@ function search(text) {
         for (i in hits) {
           hit = hits[i];
           course = new Course(hit._source);
-          dataPoints.push( course.getChartData() );
-          labels.push(course.getLabel()); 
+          courses.push(course);
         }
       } catch(err) {
         result_prompt = "Some thing went wrong. " + err;
       }
-      console.log(dataPoints)
-      console.log(labels)
-      show(dataPoints, labels);
-
+      var dataSets = {};
+      for (i in courses) {
+        var course = courses[i];
+        if (dataSets.hasOwnProperty(course.getLabel())) {
+          console.log(dataSets);
+          dataSets[course.getLabel()].push(course.getChartData());
+        } else {
+          dataSets[course.getLabel()] = [course.getChartData()];
+        }
+      }
+      show(dataSets)
     });
   }
 }
-function show(dataPoints, labels){
-  console.log(dataPoints)
-  for (i=0; i<dataPoints.length; i++){
-        myChart.data.datasets.push({
-            label: 'First Dataset',
-            data: [],
-            backgroundColor:"#FF6384",
-            hoverBackgroundColor: "#FF6384",
-          })
-        myChart.data.datasets[i].data = [dataPoints[i]];
-        myChart.data.datasets[i].label = labels[i];
-    }
-    myChart.update();    
-    }
+function show(dataSets){
+  console.log(dataSets)
+  myChart.data.datasets = [];
+  for (key in dataSets) {
+    myChart.data.datasets.push({
+      label: key,
+      data: dataSets[key],
+      backgroundColor: getRandomColor(),
+      hoverBackgroundColor: getRandomColor(),
+    })
+  }
+  myChart.update();    
+}
 
+function getRandomColor() {
+    var letters = '0123456789ABCDEF';
+    var color = '#';
+    for (var i = 0; i < 6; i++ ) {
+        color += letters[Math.floor(Math.random() * 16)];
+    }
+    return color;
+}
 
 </script>
