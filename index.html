@@ -94,7 +94,7 @@ function Course (data) {
   // this.resp_rate = data.resp_rate || "";
   this.semester = data.semester || "";
   this.name = data.name || "";
-  // this.enrollment = data.enrollment || "";
+  this.enrollment = data.enrollment || 0;
   // this.co_taught = data.co_taught || "";
   this.department = data.department || "";
   // this.responses = data.responses || "";
@@ -113,7 +113,7 @@ function Course (data) {
     var dataPoint = {};
     dataPoint.x = normalizeScore(this.questions["Q-10"]);
     dataPoint.y = this.questions["Q-01"];
-    dataPoint.r = 15;
+    dataPoint.r = Math.sqrt(this.enrollment);
     return dataPoint
   };
 
@@ -175,12 +175,14 @@ function search(text) {
 function show(dataSets){
   console.log(dataSets)
   myChart.data.datasets = [];
+
   for (key in dataSets) {
+    var color =  getRandomColor();
     myChart.data.datasets.push({
       label: key,
       data: dataSets[key],
-      backgroundColor: getRandomColor(),
-      hoverBackgroundColor: getRandomColor(),
+      backgroundColor: color,
+      hoverBackgroundColor: color,
     })
   }
   myChart.update();    
