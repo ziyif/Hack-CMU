@@ -27,13 +27,7 @@
         type: 'bubble',
         data: {
             labels: ["Red", "Blue"],
-            datasets: [
-        {
-            label: 'First Dataset',
-            data: [],
-            backgroundColor:"#FF6384",
-            hoverBackgroundColor: "#FF6384",
-          }]
+            datasets: []
         },
         options: {
             scales: {
@@ -113,7 +107,7 @@ function Course (data) {
     var dataPoint = {};
     dataPoint.x = normalizeScore(this.questions["Q-10"]);
     dataPoint.y = this.questions["Q-01"];
-    dataPoint.r = Math.sqrt(this.enrollment);
+    dataPoint.r = Math.sqrt(this.enrollment) * 1.5;
     return dataPoint
   };
 
@@ -161,11 +155,13 @@ function search(text) {
       var dataSets = {};
       for (i in courses) {
         var course = courses[i];
-        if (dataSets.hasOwnProperty(course.getLabel())) {
-          console.log(dataSets);
-          dataSets[course.getLabel()].push(course.getChartData());
-        } else {
-          dataSets[course.getLabel()] = [course.getChartData()];
+        if (course.year >= 2015) {
+          if (dataSets.hasOwnProperty(course.getLabel())) {
+            console.log(dataSets);
+            dataSets[course.getLabel()].push(course.getChartData());
+          } else {
+            dataSets[course.getLabel()] = [course.getChartData()];
+          }
         }
       }
       show(dataSets)
