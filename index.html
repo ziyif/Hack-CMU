@@ -9,31 +9,35 @@
   </head>
 
   <body>
-    <h1>Choose Your Professor</h1>
+    <h1 style="text-align: center; font-family:'Georgia'; color: brown;">Choose Your Professor @ CMU</h1>
         <form class="form-horizontal col-sm-12" id="search-form">
         <div class="form-group">
         <div class="input-group">
-        <input class="form-control" placeholder="15112, 21127, 76101..." type="search">
+        <p style="text-align: center"><input class="form-control" placeholder="15112, 21127, 76101..." type="search">
         <span class="input-group-btn">
-        <button class="btn btn-default" type="submit">Go!</button>
+        <button class="btn btn-default" type="submit">Go!</button></p>
         </span>
         </div> 
         </div>
         </form>
-    <canvas id="myChart" width="50" height="25"></canvas>
+    <p>Hrs/wk</p>
+    <canvas id="myChart" width="50" height="16"></canvas>
+    <p style="text-align: center">Overall Rating</p>
     <script>
     var ctx = document.getElementById("myChart");
     var myChart = new Chart(ctx, {
         type: 'bubble',
         data: {
             labels: ["Red", "Blue"],
-            datasets: []
+            datasets: [],
+            xLabels:['Overall Rating'],
+            yLabels:['Working Hours/week']
         },
         options: {
             scales: {
                 yAxes: [{
                     ticks: {
-                        max: 25,
+                        max: 30,
                         min: 0,
                         stepSize: 5
                     }
@@ -41,15 +45,17 @@
                 xAxes: [{
                     ticks: {
                         max: 100,
-                        min: 0,
-                        stepSize: 10
+                        min: 50,
+                        stepSize: 5
                     }
                 }]
+
             }
         }
 
     });
     </script>
+
   </body>
 </html>
 
@@ -173,7 +179,7 @@ function show(dataSets){
   myChart.data.datasets = [];
 
   for (key in dataSets) {
-    var color =  getRandomColor();
+    var color = getRandomColor();
     myChart.data.datasets.push({
       label: key,
       data: dataSets[key],
