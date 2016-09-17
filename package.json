@@ -4,7 +4,9 @@
   "description": "",
   "main": "index.js",
   "dependencies": {
-    "chart.js": "^2.2.2"
+    "chart.js": "^2.2.2",
+    "react": "^15.3.1",
+    "react-dom": "^15.3.1"
   },
   "devDependencies": {
     "babel-core": "^6.14.0",
@@ -18,8 +20,19 @@
     "style-loader": "^0.13.1",
     "webpack": "^1.13.2"
   },
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "scripts": {
+    "webpack": "webpack --watch",
+    "babel": "babel src --out-dir build -w",
+    "server": "browser-sync --port 4000 start --server --files \"**/*.html\" \"build/**/*.css\" \"build/**/*.js\" \"**/*.json\"",
+    "minifyjs": "uglifyjs --compress --mangle --output build/bundle.min.js -- build/bundle.js"
+  },
+  "babel": {
+    "presets": [
+      "es2015",
+      "react",
+      "stage-0"
+    ],
+    "sourceMaps": false
   },
   "author": "",
   "license": "ISC"
