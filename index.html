@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title></title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta charset="UTF-8">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.0/jquery.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.2.2/Chart.bundle.js"></script>
+  </head>
+
+  <body>
+    <h1>Choose Your Professor</h1>
+        <form class="form-horizontal col-sm-12" id="search-form">
+        <div class="form-group">
+        <div class="input-group">
+        <input class="form-control" placeholder="15112, 21127, 76101..." type="search">
+        <span class="input-group-btn">
+        <button class="btn btn-default" type="submit">Go!</button>
+        </span>
+        </div> 
+        </div>
+        </form>
+    <canvas id="myChart" width="50" height="25"></canvas>
+    <script>
+    var ctx = document.getElementById("myChart");
+    var myChart = new Chart(ctx, {
+        type: 'bubble',
+        data: {
+            labels: ["Red", "Blue"],
+            datasets: [
+        {
+            label: 'First Dataset',
+            data: [],
+            backgroundColor:"#FF6384",
+            hoverBackgroundColor: "#FF6384",
+          }]
+        },
+        options: {
+            scales: {
+                yAxes: [{
+                    ticks: {
+                        max: 25,
+                        min: 0,
+                        stepSize: 5
+                    }
+                }],
+                xAxes: [{
+                    ticks: {
+                        max: 100,
+                        min: 0,
+                        stepSize: 10
+                    }
+                }]
+            }
+        }
+
+    });
+    </script>
+  </body>
+</html>
+
+
+
+
+<script>
+
+$(function() { //shorthand document.ready function
+  $("#search-form").on('submit', function(e) {
+      e.preventDefault();
+      var data = $("#search-form :input").val();
+      search(data);
+      // var dataPoints = search(data);
+      
+  });
+});
+
+//     QUESTIONS_MAP = {
+//     'hrs per week': 'Q-01',
+//     'interest in student learning': 'Q-02',
+//     'explain course requirements': 'Q-03',
+//     'clear learning goals': 'Q-04',
+//     'feedback to students': 'Q-05',
+//     'importance of subject': 'Q-06',
+//     'explains subject matter': 'Q-07',
+//     'show respect for students': 'Q-08',
+//     'overall teaching': 'Q-09',
+//     'overall course': 'Q-10',
+// }
+function Course (data) {
+  this.year = data.year || "";
+  //this.section = data.section || "";
+  // this.type = data.type || "";
+  this.courseid = data.courseid || "";
+  // this.resp_rate = data.resp_rate || "";
+  this.semester = data.semester || "";
+  this.name = data.name || "";
+  // this.enrollment = data.enrollment || "";
+  // this.co_taught = data.co_taught || "";
+  this.department = data.department || "";
+  // this.responses = data.responses || "";
+  this.instructor = data.instructor || "";
+  this.questions = (function(data) {
+      q = {};
+      $.each(data.questions || {}, function( key, val ) {
+        if (val.body.startsWith("Q-")) {
+          q[val.body] = val.value;
+        }
+      });
+      return q;
+    })(data);
+
+  this.getChartData = function() {
+    var dataPoint = {};
+    dataPoint.x = normalizeScore(this.questions["Q-10"]);
+    dataPoint.y = this.questions["Q-01"];
+    dataPoint.r = 15;
+    return dataPoint
+  };
+
+  this.getLabel = function() {
+    label = this.instructor
+    return label
+  }
+};
+
+function normalizeScore(score) {
+return Math.round(score / 5 * 100);
+}
+
+function search(text) {
+  var courseid;
+  var match = text.match(/(\d{2})[-]?(\d{3})/);
+  if (match !== null) {
+    courseid = match[1] + "-" + match[2];
+  } 
+
+  var BASE_URL = "https://courseapi-scotty.rhcloud.com/fce/_search?size=300&sort=year:desc&default_operator=AND";
+  var search_url;
+  // Construct query url to the server.
+  if (courseid) {
+    search_url = BASE_URL.concat("&q=courseid:", courseid);
+  } 
+
+  if (search_url) {
+    $.getJSON( search_url, function( data ) {
+      var dataPoints = [];
+      var labels = []
+      var result_prompt = "<br/>";
+      try {
+        var hits = data.hits.hits;
+        if (data.hits.total == 0) {
+          result_prompt = "Nothing was found.";
+        }
+        for (i in hits) {
+          hit = hits[i];
+          course = new Course(hit._source);
+          dataPoints.push( course.getChartData() );
+          labels.push(course.getLabel()); 
+        }
+      } catch(err) {
+        result_prompt = "Some thing went wrong. " + err;
+      }
+      console.log(dataPoints)
+      console.log(labels)
+      show(dataPoints, labels);
+
+    });
+  }
+}
+function show(dataPoints, labels){
+  console.log(dataPoints)
+  for (i=0; i<dataPoints.length; i++){
+        myChart.data.datasets.push({
+            label: 'First Dataset',
+            data: [],
+            backgroundColor:"#FF6384",
+            hoverBackgroundColor: "#FF6384",
+          })
+        myChart.data.datasets[i].data = [dataPoints[i]];
+        myChart.data.datasets[i].label = labels[i];
+    }
+    myChart.update();    
+    }
+
+
+</script>
