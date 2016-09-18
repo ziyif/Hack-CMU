@@ -2,7 +2,7 @@
 <html>
 
 <head>
-  <title></title>
+  <title>PROFect Match</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta charset="UTF-8">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.0/jquery.js"></script>
@@ -25,7 +25,7 @@
   <p style="text-align: right; font-size: 0.8rem; color: grey">Data obtained from the course api by Scotty Labs© (2015-2016)</p>
   <p style="text-align: right; font-size: 0.8rem; color: grey; line-height: 40%;">by Flora Feng, Xun Zhou, Xiao Shen, Zizhuo (Max) Chen</p>
   <p>Hrs/wk</p>
-  <canvas id="myChart" width="50" height="14"></canvas>
+  <canvas id="myChart" style="width:100%; height:80vh;"></canvas>
   <p style="text-align: center">Overall Rating</p>
   <script>
     var ctx = document.getElementById("myChart");
@@ -34,8 +34,6 @@
       data: {
         labels: ["Red", "Blue"],
         datasets: [],
-        xLabels: ['Overall Rating'],
-        yLabels: ['Working Hours/week']
       },
       options: {
         scales: {
@@ -53,154 +51,145 @@
               stepSize: 5
             }
           }]
-
-        }
+        },
+        // Boolean - whether or not the chart should be responsive and resize when the browser does.
+        responsive: true,
+        // maintainAspectRatio: false
       }
-
     });
   </script>
+  <script>
+    $(function() { //shorthand document.ready function
+      $("#search-form").on('submit', function(e) {
+        e.preventDefault();
+        var data = $("#search-form :input").val();
+        search(data);
+      });
+    });
+    //     QUESTIONS_MAP = {
+    //     'hrs per week': 'Q-01',
+    //     'interest in student learning': 'Q-02',
+    //     'explain course requirements': 'Q-03',
+    //     'clear learning goals': 'Q-04',
+    //     'feedback to students': 'Q-05',
+    //     'importance of subject': 'Q-06',
+    //     'explains subject matter': 'Q-07',
+    //     'show respect for students': 'Q-08',
+    //     'overall teaching': 'Q-09',
+    //     'overall course': 'Q-10',
+    // }
+    function Course(data) {
+      this.year = data.year || "";
+      //this.section = data.section || "";
+      // this.type = data.type || "";
+      this.courseid = data.courseid || "";
+      // this.resp_rate = data.resp_rate || "";
+      this.semester = data.semester || "";
+      this.name = data.name || "";
+      this.enrollment = data.enrollment || 0;
+      // this.co_taught = data.co_taught || "";
+      this.department = data.department || "";
+      // this.responses = data.responses || "";
+      this.instructor = data.instructor || "";
+      this.questions = (function(data) {
+        q = {};
+        $.each(data.questions || {}, function(key, val) {
+          if (val.body.startsWith("Q-")) {
+            q[val.body] = val.value;
+          }
+        });
+        return q;
+      })(data);
 
+      this.getChartData = function() {
+        var dataPoint = {};
+        dataPoint.x = normalizeScore(this.questions["Q-10"]);
+        dataPoint.y = this.questions["Q-01"];
+        dataPoint.r = Math.sqrt(this.enrollment) * 1.5;
+        return dataPoint
+      };
+
+      this.getLabel = function() {
+        label = this.instructor
+        return label
+      };
+    };
+
+    function normalizeScore(score) {
+      return Math.round(score / 5 * 100);
+    }
+
+    function search(text) {
+      var courseid;
+      var match = text.match(/(\d{2})[-]?(\d{3})/);
+      if (match !== null) {
+        courseid = match[1] + "-" + match[2];
+      }
+      var BASE_URL = "https://courseapi-scotty.rhcloud.com/fce/_search?size=300&sort=year:desc&default_operator=AND";
+      var search_url;
+      // Construct query url to the server.
+      if (courseid) {
+        search_url = BASE_URL.concat("&q=courseid:", courseid);
+      }
+      if (search_url) {
+        $.getJSON(search_url, function(data) {
+          var courses = [];
+          var result_prompt = "<br/>";
+          try {
+            var hits = data.hits.hits;
+            if (data.hits.total == 0) {
+              result_prompt = "Nothing was found.";
+            }
+            for (i in hits) {
+              hit = hits[i];
+              course = new Course(hit._source);
+              courses.push(course);
+            }
+          } catch (err) {
+            result_prompt = "Some thing went wrong. " + err;
+          }
+          var dataSets = {};
+          for (i in courses) {
+            var course = courses[i];
+            if (course.year >= 2015) {
+              if (dataSets.hasOwnProperty(course.getLabel())) {
+                console.log(dataSets);
+                dataSets[course.getLabel()].push(course.getChartData());
+              } else {
+                dataSets[course.getLabel()] = [course.getChartData()];
+              }
+            }
+          }
+          show(dataSets)
+        });
+      }
+    }
+
+    function show(dataSets) {
+      console.log(dataSets)
+      myChart.data.datasets = [];
+
+      for (key in dataSets) {
+        var color = getRandomColor();
+        myChart.data.datasets.push({
+          label: key,
+          data: dataSets[key],
+          backgroundColor: color,
+          hoverBackgroundColor: color,
+        })
+      }
+      myChart.update();
+    }
+
+    function getRandomColor() {
+      var letters = '0123456789ABCDEF';
+      var color = '#';
+      for (var i = 0; i < 6; i++) {
+        color += letters[Math.floor(Math.random() * 16)];
+      }
+      return color;
+    }
+  </script>
 </body>
 
 </html>
-
-
-
-
-<script>
-  $(function() { //shorthand document.ready function
-    $("#search-form").on('submit', function(e) {
-      e.preventDefault();
-      var data = $("#search-form :input").val();
-      search(data);
-      // var dataPoints = search(data);
-
-    });
-  });
-
-  //     QUESTIONS_MAP = {
-  //     'hrs per week': 'Q-01',
-  //     'interest in student learning': 'Q-02',
-  //     'explain course requirements': 'Q-03',
-  //     'clear learning goals': 'Q-04',
-  //     'feedback to students': 'Q-05',
-  //     'importance of subject': 'Q-06',
-  //     'explains subject matter': 'Q-07',
-  //     'show respect for students': 'Q-08',
-  //     'overall teaching': 'Q-09',
-  //     'overall course': 'Q-10',
-  // }
-  function Course(data) {
-    this.year = data.year || "";
-    //this.section = data.section || "";
-    // this.type = data.type || "";
-    this.courseid = data.courseid || "";
-    // this.resp_rate = data.resp_rate || "";
-    this.semester = data.semester || "";
-    this.name = data.name || "";
-    this.enrollment = data.enrollment || 0;
-    // this.co_taught = data.co_taught || "";
-    this.department = data.department || "";
-    // this.responses = data.responses || "";
-    this.instructor = data.instructor || "";
-    this.questions = (function(data) {
-      q = {};
-      $.each(data.questions || {}, function(key, val) {
-        if (val.body.startsWith("Q-")) {
-          q[val.body] = val.value;
-        }
-      });
-      return q;
-    })(data);
-
-    this.getChartData = function() {
-      var dataPoint = {};
-      dataPoint.x = normalizeScore(this.questions["Q-10"]);
-      dataPoint.y = this.questions["Q-01"];
-      dataPoint.r = Math.sqrt(this.enrollment) * 1.5;
-      return dataPoint
-    };
-
-    this.getLabel = function() {
-      label = this.instructor
-      return label
-    };
-  };
-
-  function normalizeScore(score) {
-    return Math.round(score / 5 * 100);
-  }
-
-  function search(text) {
-    var courseid;
-    var match = text.match(/(\d{2})[-]?(\d{3})/);
-    if (match !== null) {
-      courseid = match[1] + "-" + match[2];
-    }
-
-    var BASE_URL = "https://courseapi-scotty.rhcloud.com/fce/_search?size=300&sort=year:desc&default_operator=AND";
-    var search_url;
-    // Construct query url to the server.
-    if (courseid) {
-      search_url = BASE_URL.concat("&q=courseid:", courseid);
-    }
-
-    if (search_url) {
-      $.getJSON(search_url, function(data) {
-        var courses = [];
-        var result_prompt = "<br/>";
-        try {
-          var hits = data.hits.hits;
-          if (data.hits.total == 0) {
-            result_prompt = "Nothing was found.";
-          }
-          for (i in hits) {
-            hit = hits[i];
-            course = new Course(hit._source);
-            courses.push(course);
-          }
-        } catch (err) {
-          result_prompt = "Some thing went wrong. " + err;
-        }
-        var dataSets = {};
-        for (i in courses) {
-          var course = courses[i];
-          if (course.year >= 2015) {
-            if (dataSets.hasOwnProperty(course.getLabel())) {
-              console.log(dataSets);
-              dataSets[course.getLabel()].push(course.getChartData());
-            } else {
-              dataSets[course.getLabel()] = [course.getChartData()];
-            }
-          }
-        }
-        show(dataSets)
-      });
-    }
-  }
-
-  function show(dataSets) {
-    console.log(dataSets)
-    myChart.data.datasets = [];
-
-    for (key in dataSets) {
-      var color = getRandomColor();
-      myChart.data.datasets.push({
-        label: key,
-        data: dataSets[key],
-        backgroundColor: color,
-        hoverBackgroundColor: color,
-      })
-    }
-    myChart.update();
-  }
-
-  function getRandomColor() {
-    var letters = '0123456789ABCDEF';
-    var color = '#';
-    for (var i = 0; i < 6; i++) {
-      color += letters[Math.floor(Math.random() * 16)];
-    }
-    return color;
-  }
-</script>
