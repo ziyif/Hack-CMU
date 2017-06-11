@@ -17,8 +17,9 @@
       <div class="input-group">
         <p style="text-align: center"><input class="form-control" placeholder="15112, 21127, 76101..." type="search">
           <span class="input-group-btn">
-        <button class="btn btn-default" type="submit">Go!</button></p>
-        </span>
+            <button class="btn btn-default" type="submit">Go!</button>
+          </span>
+        </p>
       </div>
     </div>
   </form>
@@ -125,24 +126,24 @@
       if (match !== null) {
         courseid = match[1] + "-" + match[2];
       }
-      var BASE_URL = "https://courseapi-scotty.rhcloud.com/fce/_search?size=300&sort=year:desc&default_operator=AND";
+      var BASE_URL = "https://api.cmucoursefind.xyz/fce/v1/";
       var search_url;
       // Construct query url to the server.
       if (courseid) {
-        search_url = BASE_URL.concat("&q=courseid:", courseid);
+        search_url = BASE_URL.concat("courseid/", courseid, "/");
       }
       if (search_url) {
         $.getJSON(search_url, function(data) {
           var courses = [];
           var result_prompt = "<br/>";
           try {
-            var hits = data.hits.hits;
-            if (data.hits.total == 0) {
+            var hits = data.fces;
+            if (hits.length == 0) {
               result_prompt = "Nothing was found.";
             }
             for (i in hits) {
               hit = hits[i];
-              course = new Course(hit._source);
+              course = new Course(hit);
               courses.push(course);
             }
           } catch (err) {
